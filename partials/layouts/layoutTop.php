@@ -1,6 +1,6 @@
 <?php
-// Get theme from cookie/localStorage (will be set by JavaScript)
-// Default to light if not set
+// Get theme from cookie or default to light
+// Note: JavaScript will override this based on localStorage
 $currentTheme = $_COOKIE['theme'] ?? 'light';
 
 // Get current language and direction for RTL support
@@ -18,6 +18,22 @@ if (function_exists('get_text_direction')) {
 <!-- meta tags and other links -->
 <!DOCTYPE html>
 <html lang="<?php echo htmlspecialchars($currentLang); ?>" data-theme="<?php echo htmlspecialchars($currentTheme); ?>" dir="<?php echo htmlspecialchars($textDirection); ?>">
+<script>
+    // Immediately apply theme from localStorage before page renders to prevent flash
+    (function() {
+        var storedTheme = localStorage.getItem('theme');
+        var lightDarkTheme = localStorage.getItem('lightDarkTheme');
+        var isMonochrome = localStorage.getItem('monochromeMode') === 'true';
+        
+        if (isMonochrome) {
+            // If monochrome is active, use the stored light/dark theme
+            var theme = lightDarkTheme || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        } else if (storedTheme && storedTheme !== 'monochrome') {
+            document.documentElement.setAttribute('data-theme', storedTheme);
+        }
+    })();
+</script>
 
 <?php 
 // Use absolute path to ensure it works regardless of where it's included from

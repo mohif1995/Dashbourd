@@ -35,16 +35,15 @@
                     // Turn off monochrome
                     document.body.classList.remove('monochrome-mode');
                     localStorage.setItem('monochromeMode', 'false');
-                    // Update theme to current light/dark (not monochrome)
-                    const lightDarkTheme = localStorage.getItem('lightDarkTheme') || localStorage.getItem('theme') || 'light';
-                    if (lightDarkTheme !== 'monochrome') {
-                        localStorage.setItem('theme', lightDarkTheme);
-                    }
+                    // Restore the light/dark theme
+                    const lightDarkTheme = localStorage.getItem('lightDarkTheme') || 'light';
+                    document.documentElement.setAttribute('data-theme', lightDarkTheme);
+                    localStorage.setItem('theme', lightDarkTheme);
                 } else {
                     // Turn on monochrome
                     document.body.classList.add('monochrome-mode');
                     localStorage.setItem('monochromeMode', 'true');
-                    // Store current theme before switching to monochrome
+                    // Store current light/dark theme before switching to monochrome
                     const currentTheme = localStorage.getItem('theme') || 'light';
                     if (currentTheme !== 'monochrome') {
                         localStorage.setItem('lightDarkTheme', currentTheme);
