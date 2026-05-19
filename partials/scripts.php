@@ -181,25 +181,30 @@ if (substr($assetsUrl, 0, 1) !== '/') {
         
         // Get current theme from localStorage or default to light
         function getCurrentTheme() {
-            return localStorage.getItem('theme') || 'light';
+            const storedTheme = localStorage.getItem('theme');
+            const isMonochrome = localStorage.getItem('monochromeMode') === 'true';
+            
+            if (isMonochrome) {
+                return 'monochrome';
+            }
+            return storedTheme || 'light';
         }
         
-        // Update HTML data-theme attribute (monochrome is handled separately in footer.php)
+        // Get the actual light/dark theme (not monochrome)
+        function getLightDarkTheme() {
+            return localStorage.getItem('lightDarkTheme') || localStorage.getItem('theme') || 'light';
+        }
+        
+        // Update HTML data-theme attribute
         function updateTheme(theme) {
             const html = document.querySelector('html');
+            const isMonochrome = localStorage.getItem('monochromeMode') === 'true';
             
-            // Only handle light/dark themes here
+            // Store the light/dark theme preference
             if (theme !== 'monochrome') {
-                html.setAttribute('data-theme', theme);
-                localStorage.setItem('theme', theme);
                 localStorage.setItem('lightDarkTheme', theme);
-                
-                // If monochrome is active, keep it active but update the base theme
-                const isMonochrome = localStorage.getItem('monochromeMode') === 'true';
-                if (isMonochrome) {
-                    // Monochrome stays active, just update the underlying theme
-                    html.setAttribute('data-theme', theme);
-                }
+                localStorage.setItem('theme', theme);
+                html.setAttribute('data-theme', theme);
             }
             
             updateThemeButtons(theme);
@@ -207,53 +212,47 @@ if (substr($assetsUrl, 0, 1) !== '/') {
         
         // Toggle between light and dark
         function toggleLightDark() {
-            const current = getCurrentTheme();
-            const isMonochrome = localStorage.getItem('monochromeMode') === 'true';
-            
-            // Get the actual light/dark theme (not monochrome)
-            let currentLightDark;
-            if (isMonochrome) {
-                currentLightDark = localStorage.getItem('lightDarkTheme') || 'light';
-            } else {
-                currentLightDark = current !== 'monochrome' ? current : 'light';
-            }
-            
+            const currentLightDark = getLightDarkTheme();
             const newTheme = (currentLightDark === 'light') ? 'dark' : 'light';
             updateTheme(newTheme);
         }
         
         // Update button states and icons
         function updateThemeButtons(currentTheme) {
+            const isMonochrome = localStorage.getItem('monochromeMode') === 'true';
+            const lightDarkTheme = getLightDarkTheme();
+            
             // Handle light/dark toggle button
             const lightDarkBtn = document.querySelector('[data-theme-toggle="light-dark"]');
             if (lightDarkBtn) {
                 const lightIcon = lightDarkBtn.querySelector('.theme-icon-light');
                 const darkIcon = lightDarkBtn.querySelector('.theme-icon-dark');
                 
-                // Only update icons if they exist
+                // Show appropriate icon based on current light/dark theme
                 if (lightIcon && darkIcon) {
-                    if (currentTheme === 'light') {
+                    if (lightDarkTheme === 'light') {
                         lightIcon.style.display = 'block';
                         darkIcon.style.display = 'none';
-                    } else if (currentTheme === 'dark') {
-                        lightIcon.style.display = 'none';
-                        darkIcon.style.display = 'block';
                     } else {
-                        // Monochrome is active, show dark icon but dimmed
                         lightIcon.style.display = 'none';
                         darkIcon.style.display = 'block';
                     }
                 }
                 
-                // Update button background
-                lightDarkBtn.classList.remove('bg-primary-600');
-                lightDarkBtn.classList.add('bg-neutral-200');
+                // Update button background - highlight if monochrome is active
+                if (isMonochrome) {
+                    lightDarkBtn.classList.add('bg-primary-600');
+                    lightDarkBtn.classList.remove('bg-neutral-200');
+                } else {
+                    lightDarkBtn.classList.remove('bg-primary-600');
+                    lightDarkBtn.classList.add('bg-neutral-200');
+                }
             }
             
             // Handle monochrome button
             const monochromeBtn = document.querySelector('[data-theme-toggle="monochrome"]');
             if (monochromeBtn) {
-                if (currentTheme === 'monochrome') {
+                if (isMonochrome) {
                     monochromeBtn.classList.add('active');
                     monochromeBtn.classList.add('bg-primary-600');
                     monochromeBtn.classList.remove('bg-neutral-200');
@@ -265,24 +264,16 @@ if (substr($assetsUrl, 0, 1) !== '/') {
             }
         }
         
-        // Wait for DOM to be fully loaded before initializing
+        // Initialize theme switcher
         function initThemeSwitcher() {
-            // Initialize theme on page load
-            const currentTheme = getCurrentTheme();
             const isMonochrome = localStorage.getItem('monochromeMode') === 'true';
+            const lightDarkTheme = getLightDarkTheme();
             
-            // If monochrome is active, use the stored light/dark theme for data-theme
-            if (isMonochrome) {
-                const lightDarkTheme = localStorage.getItem('lightDarkTheme') || 'light';
-                document.querySelector('html').setAttribute('data-theme', lightDarkTheme);
-            } else {
-                // Normal theme initialization
-                const theme = currentTheme !== 'monochrome' ? currentTheme : 'light';
-                updateTheme(theme);
-            }
+            // Apply theme to HTML element
+            document.querySelector('html').setAttribute('data-theme', lightDarkTheme);
             
             // Update button states
-            updateThemeButtons(isMonochrome ? 'monochrome' : currentTheme);
+            updateThemeButtons(isMonochrome ? 'monochrome' : lightDarkTheme);
             
             // Light/Dark toggle button handler
             const lightDarkBtn = document.querySelector('[data-theme-toggle="light-dark"]');
@@ -296,7 +287,7 @@ if (substr($assetsUrl, 0, 1) !== '/') {
             // Listen for monochrome mode changes from footer.php
             window.addEventListener('monochromeModeChanged', function(e) {
                 const isMonochrome = e.detail.isMonochrome;
-                const currentTheme = isMonochrome ? 'monochrome' : (localStorage.getItem('lightDarkTheme') || 'light');
+                const currentTheme = isMonochrome ? 'monochrome' : getLightDarkTheme();
                 updateThemeButtons(currentTheme);
             });
         }
@@ -305,7 +296,6 @@ if (substr($assetsUrl, 0, 1) !== '/') {
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initThemeSwitcher);
         } else {
-            // DOM is already loaded
             initThemeSwitcher();
         }
     })();

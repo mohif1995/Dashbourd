@@ -1,47 +1,46 @@
-# Backup directories
-backup/
-backup_old_files/
-__backup/
-backups/
+```
+# Compiled and build artifacts
+*.pyc
+__pycache__/
+*.o
+*.obj
+*.class
+*.exe
+*.dll
+*.so
+*.a
+*.out
 
-# Development files (kept in devfiles/)
+# Dependencies
+node_modules/
+venv/
+.venv/
+.env
+.env.local
+.env.*
+
+# Logs and temp files
 *.log
-*.cache
-
-# IDE files
-.vscode/
-.idea/
+*.tmp
 *.swp
 *.swo
-*~
-.cursor/
 
-# GitHub
-.github/
+# Editors
+.vscode/
+.idea/
 
-# Responses directory (for GitHub issue responses)
-responses/
+# Coverage
+.coverage
+coverage/
+htmlcov/
 
-# OS files
+# Distribution / packaging
+dist/
+build/
+*.tar.gz
+*.zip
+
+# OS generated files
 .DS_Store
 Thumbs.db
-desktop.ini
-
-# Temporary files
-*.tmp
-*.temp
-*.bak
-
-# Uploaded files
-uploaded/
-
-# Cache directory
-cache/
-
-# Logs directory
-logs/
-
-# User preferences (contains sensitive data like passwords)
-data/preferences.json
-
-vendor/
+```
